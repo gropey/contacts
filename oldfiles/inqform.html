@@ -1,0 +1,379 @@
+<script type="text/javascript">
+var eId = {
+ id:0,
+ cid:0,
+ row:$(),
+ setRow:function(r){if(r){this.row = r;}return this.row;},
+ getRow:function(){return this.row;},
+ hiltRow:function(){$(this.row).css('backgroundColor','yellow');},
+ unhltRow:function(){$(this.row).css('backgroundColor','#fff');},
+ setId:function(i){this.id = i;},
+ getId:function(){return this.id;},
+ setCid:function(c){this.cid = c;},
+ getCid:function(){return this.cid;},
+ repno:0,
+ reEmail:/\b[A-Z0-9._%+-]+@[A-Z0-9-.]+\.[A-Z]{2,4}\b/i,
+ setRepno:function(rn){
+   if(rn){
+     this.repno = rn;
+   }
+   return this.rn;
+ },
+ getRepno:function(){
+   return this.repno;
+ },
+ valEmail:function (sText){
+    return this.reEmail.test(sText);
+ }
+};
+
+$(function(){
+ eId.setRepno($.cookie('MYUser')); 
+ $('input[type=button]').click(dispatch); 
+ $('#email').keydown(function(event){
+    if (event.keyCode == 13) {
+        if ($('input[type=checkbox]:checked').size() > 0 || eId.valEmail($(this).val())) {
+            vld();
+        }
+        else {
+            findEmail();
+        }     
+   }
+ });
+ listemails();
+ $('input[name=send]').click(function(event){
+  if( $(this).val() > 0){
+    $('#none').removeAttr('checked');
+  }else{
+    $('#offg,#invite,#blog').removeAttr('checked');
+  }
+ });
+ $('input[name=taxstatus]').click(function(event){
+    $('input[name=taxstatus][value!='+$(this).val()+']').removeAttr('checked');
+ });
+ $('input[name=rating]').click(function(event){
+    $('input[name=rating][value!='+$(this).val()+']').removeAttr('checked');
+ });
+ $('input[name=mat]').click(function(event){
+  if( /^any/.test($(this).attr('id'))){
+    $('#ltf,#gtf,#gtt').removeAttr('checked');
+  }else{
+    $('#anymat').removeAttr('checked');
+  }
+ });
+ $('input[name=px]').click(function(event){
+  if( /^any/.test($(this).attr('id'))){
+    $('#disc,#par,#prem').removeAttr('checked');
+  }else{
+    $('#anypx').removeAttr('checked');
+  }
+ });
+ $('label[for=del]').hide();
+});
+function dispatch(event){
+if(event){
+ switch($('input[type=button]').index($(event.target))){
+   case 0: vld();
+   break;
+   case 3: clr();
+   break;
+   case 2: reset();
+   break;
+   case 1: findEmail();
+   break;
+ }
+}
+event.stopPropagation();
+}
+function listemails(){
+ $('#data').load('cgi/inqemaillist.pl?ae='+eId.getRepno(),function(data){
+    $('#inqem tr').mouseover(function(){
+       $(this).addClass('hilite');
+     }).mouseout(function(){
+       $(this).removeClass('hilite');
+     });
+ });
+}
+function setForm(str){
+ $('#minicard').remove();
+ var ary = str.split(',');
+ eId.setId(ary[11]);
+ eId.setCid(ary[9]);
+ $('#email').val(ary[4]).removeClass('err');
+ $('#action').val('Update');
+ $('#stcodes').val(ary[7]);
+ $('#zip').val(ary[12]);
+ $('input[type=checkbox]').removeAttr('checked');
+ $('input[name=taxstatus][value='+ary[0]+']').attr('checked','checked');
+ $('input[name=rating][value='+ary[1]+']').attr('checked','checked');
+ $('input[name=mat][value='+ary[2]+']').attr('checked','checked');
+ $('input[name=px][value='+ary[3]+']').attr('checked','checked');
+ $('label[for=del]').fadeIn();
+ if(ary[9] > 0){
+    $.get('cgi/getminicard.pl?cid='+ary[9],function(data){
+        $( data ).appendTo('body');
+    });
+ }
+ switch(parseInt(ary[10])){
+   case 0:
+      $('#none').attr('checked','checked');
+      break;
+   case 5: 
+     $('#offg').attr('checked','checked');
+     $('#invite').attr('checked','checked');
+     break;
+   case 6: 
+     $('#offg').attr('checked','checked');
+     $('#blog').attr('checked','checked');
+     break;
+   case 7:
+     $('#blog').attr('checked','checked');
+     $('#invite').attr('checked','checked');
+     break;
+   case 9:
+    $('#offg,#invite,#blog').attr('checked','checked');
+    break;
+   default:
+    $('input[name=send]').filter(function(index){
+       if((ary[10] - 1) == index){
+         $(this).attr('checked','checked');
+       }
+    });     
+ }
+}
+function findEmail(){
+ var strEmail = $.trim($('#email').val());
+ if (/\w+/.test(strEmail)) {
+    $.ajax({
+        url:'cgi/fetch_email_row.pl',
+        type:'GET',
+        data:{'email':strEmail,'ae':eId.getRepno()},
+        success:function(d) {
+            if (d.length == 0) {
+                alert('No matches');
+                return false;
+            }else{      
+                setForm(d);
+            }
+        }
+    });
+ }
+ else {
+    $('#email').addClass('err').focus();
+    return false;
+ }
+}
+function vld(){
+var url = new String();
+var ok = true;
+var params = {send:0,email:'',state:'XX',ae:'HS11',taxstatus:'A',rating:'A',mat:3,px:'any'};
+if(eId.valEmail($('#email').val())){
+   params['email'] = $('#email').val();
+}else{
+   alert( 'Review/reenter email box.' );
+   $('#email').addClass('err').focus();
+   return false;
+}
+if (/\d{5}/.test( $('input[name=zip]').val() )) {
+    params['zip'] = $('#zip').val();
+}
+params['ae'] = eId.getRepno();
+params['state'] = isValidState($('#stcodes').val());
+$('input[type=checkbox]').each(function(index){
+  if($(this).attr('checked')){
+    if($(this).attr('name')=='send'){
+       params['send'] += parseInt($(this).val());
+    }else{
+       params[$(this).attr('name')] = $(this).val();
+    }
+  }
+});
+if($('#action').val() == 'Update'){
+  params['id'] = eId.getId();
+  params['cid'] = eId.getCid();
+  url = 'cgi/updateinqemail.pl';
+}else{
+  $.ajax({
+      url:'cgi/fetch_email_row.pl',
+      type:'POST',
+      async:false,
+      data:{'email':$.trim(params['email'])},
+      success: function(data){
+        if(data.length > 0){
+            ok = false;
+            return false;
+        }    
+      }
+  });   
+  if (!ok){
+    $('#email').val(params['email']);
+    alert( 'This email is in the database.' );
+    return false;
+  }
+  url = 'cgi/addinqemail.pl';
+}
+
+$.post(url,params,function(data){
+    listemails();
+    reset();
+});
+}
+function isValidState(st){
+ return (/[A-Z][A-Z]/.test(st)) ? st : 0;
+}
+function isValidAcct(sText){
+ var reAcctNo=/^(?:\d{8})$/;
+ return reAcctNo.test(sText);
+}
+function editEmail(x){
+ $('html,body').animate({scrollTop:0},'fast');
+ eId.unhltRow();
+ eId.setRow(x);
+ $.get('cgi/getinqemail.pl?id='+x.id,function(data){
+   setForm(data);
+   eId.hiltRow();
+ });
+ $('label[for=del]').fadeIn();
+}
+function reset(){
+ $('#action').val('Add');
+ $('#email').val('').removeClass('err');
+ $('#zip').val('').removeClass('err');
+ $('#stcodes').prop('selectedIndex',0); 
+ $('input[type=checkbox]').removeAttr('checked');
+ eId.unhltRow();
+ $('#minicard').remove();
+ $('label[for=del]').hide();
+}
+</script>
+<style>
+#inqform select{font-family:arial,verdana;text-align:center;}
+input[type=button]{font-size:8pt;} 
+label{padding-left:3px;text-align:right;font-family:tahoma;font-size:8pt;}
+p{letter-spacing:3px;font-family:tahoma;color:#777;text-align:left;}
+#data td{text-align:right;font-family:arial;font-size:8pt;cursor:pointer;}
+th{font-family:tahoma;font-size:8pt;color:#234;background-color:#eee;text-align:right;}
+.ckbx{text-align:right;}
+.textinput{text-align:left;}
+table{border:1px solid #ccc;}
+#inqform{box-shadow:8px 8px 5px #888;}
+#minicard td{padding-right:15px;}
+#status{text-align:center;}
+td.inqBtns{text-align:left;}
+.err{border:1px solid red;}
+</style>
+<p>Inquiry/Email Form</p>
+<table id="inqform">
+<col width="120px" />
+<col width="90px" />
+<col width="90px" />
+<col width="90px" />
+<col width="90px" />
+<tr>
+<td class="inqBtns" colspan="5">
+<input id="action" type="button" value="Add" />
+<input type="button" value="Find" />
+<input type="button" value="Reset" />
+<input type="button" value="Close" />
+</td>
+<tr class="ckbx"><th>Tax Status</th>
+<td><label for="tax">Taxable<input id="tax" name="taxstatus" type="checkbox" value="Y" /></label></td>
+<td><label for="notax">Munis<input id="notax" name="taxstatus" type="checkbox" value="N" /></label></td>
+<td><label for="anytax">Any<input id="anytax" name="taxstatus" type="checkbox" value="A" /></label></td>
+<td></td>
+</tr>
+<tr class="ckbx"><th>Rating</th>
+<td><label for="invgrd">Inv. Grade<input id="invgrd" type="checkbox" name="rating" value="I" /></label></td>
+<td><label for="junk">High Yld.<input id="junk" type="checkbox" name="rating" value="J" /></label></td>
+<td><label for="anygrd">Any<input id="anygrd" type="checkbox" name="rating" value="A" /></label></td>
+</tr>
+<tr class="ckbx"><th>Maturity</th>
+<td><label for="ltf">0 - 5<input type="checkbox" id="ltf" name="mat" value="0"  /></label></td>
+<td><label for="gtf">5 - 10<input type="checkbox" id="gtf" name="mat" value="1" /></label></td>
+<td><label for="gtt">10 - 100<input type="checkbox" id="gtt" name="mat" value="2" /></label></td>
+<td><label for="anymat">Any<input type="checkbox" id="anymat" name="mat" value="3" /></label></td>
+</tr>
+<tr class="ckbx"><th>Price</th>
+<td><label for="disc">Discounts<input type="checkbox" id="disc" value="disc" name="px" /></label></td>
+<td><label for="par">Par<input type="checkbox" value="par" id="par"  name="px" /></label></td>
+<td><label for="prem">Premium<input type="checkbox" value="prem" id="prem" name="px" /></label></td>
+<td><label for="any">Any<input type="checkbox" id="anypx" value="any" name="px" /></label></td>
+</tr>
+<tr><th>Email Address</th>
+<td colspan="4">
+    <input type="text" value="email" id="email" size="30" />
+</td>
+</tr>
+<tr>
+<th>State</th>
+<td class="textinput" colspan="2">
+ <select id="stcodes" name="State"> 
+<option value="XX">Select a State</option> 
+<option value="AL">Alabama</option> 
+<option value="AK">Alaska</option> 
+<option value="AZ">Arizona</option> 
+<option value="AR">Arkansas</option> 
+<option value="CA">California</option> 
+<option value="CO">Colorado</option> 
+<option value="CT">Connecticut</option> 
+<option value="DE">Delaware</option> 
+<option value="DC">District Of Columbia</option> 
+<option value="FL">Florida</option> 
+<option value="GA">Georgia</option> 
+<option value="HI">Hawaii</option> 
+<option value="ID">Idaho</option> 
+<option value="IL">Illinois</option> 
+<option value="IN">Indiana</option> 
+<option value="IA">Iowa</option> 
+<option value="KS">Kansas</option> 
+<option value="KY">Kentucky</option> 
+<option value="LA">Louisiana</option> 
+<option value="ME">Maine</option> 
+<option value="MD">Maryland</option> 
+<option value="MA">Massachusetts</option> 
+<option value="MI">Michigan</option> 
+<option value="MN">Minnesota</option> 
+<option value="MS">Mississippi</option> 
+<option value="MO">Missouri</option> 
+<option value="MT">Montana</option> 
+<option value="NE">Nebraska</option> 
+<option value="NV">Nevada</option> 
+<option value="NH">New Hampshire</option> 
+<option value="NJ">New Jersey</option> 
+<option value="NM">New Mexico</option> 
+<option value="NY">New York</option> 
+<option value="NC">North Carolina</option> 
+<option value="ND">North Dakota</option> 
+<option value="OH">Ohio</option> 
+<option value="OK">Oklahoma</option> 
+<option value="OR">Oregon</option> 
+<option value="PA">Pennsylvania</option> 
+<option value="RI">Rhode Island</option> 
+<option value="SC">South Carolina</option> 
+<option value="SD">South Dakota</option> 
+<option value="TN">Tennessee</option> 
+<option value="TX">Texas</option> 
+<option value="UT">Utah</option> 
+<option value="VT">Vermont</option> 
+<option value="VA">Virginia</option> 
+<option value="WA">Washington</option> 
+<option value="WV">West Virginia</option> 
+<option value="WI">Wisconsin</option> 
+<option value="WY">Wyoming</option>
+</select>
+</td>
+<th>Zip Code</th>
+<td><input type="text" name="zip" id="zip" size="6" /></td>
+</tr>
+<tr><th>Send Status</th>
+ <td id="status" colspan="4">
+ <label for="del">Delete<input id="del" name="del" type="checkbox" value="purge" /></label>
+ <label for="none">No Email<input id="none" name="send" type="checkbox" value="0" /></label>
+ <label for="offg">Offerings<input id="offg" name="send" type="checkbox" value="2" /></label>
+ <label for="invite">Invite<input id="invite" name="send" type="checkbox" value="3" /></label>
+ <label for="blog">Blog<input id="blog" name="send" type="checkbox" value="4" /></label>
+ </td>
+</tr>
+</table>
+<br />
+<div id="data"></div>

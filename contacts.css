@@ -1,0 +1,59 @@
+.frmfocus{color:green;font-weight:bold;}
+#people{border-collapse:collapse;display:none;}
+#phnos td{border-bottom:1px solid #aaa;}
+#ap{padding:20px;box-shadow:8px 8px 5px #888;border:3px solid #0F4FA8;}
+#calls_table td{font-size:9pt;}
+span.source{font-size:8pt;margin-left:2px;color:#fff;font-family:arial;}
+.labels{width:185px;font-family:tahoma;color:#666;}
+#divOutput{margin-top:20px;margin-right:60px;clear:both;}
+#alpha{width:470px;}
+#main{border:0px;}
+#main td {vertical-align:top;}
+fieldset{width:200px;font-family:arial;color:#677;}
+.cardbuttons{border:1px solid #999;padding:3px;background-color:#669;height:55px;}
+.edcall{height:90px;width:350px;z-Index:3;background-color:#f5f5f5;position:absolute;top:140px;left:380px;border:3px solid #dde;padding: 3px 0px 1px 3px;text-align:center;}
+#close{}
+.caller{color:green;}
+hr{margin-left:0px;width:60%;}
+#controls{margin-bottom:10px;width:75%;}
+input{text-align:center;cursor:pointer;}
+input[type=text]{text-align:center;cursor:pointer;border:1px solid #888;}
+span input{font-family:corbel;font-size:8pt;color:#000;}
+#logo{position:absolute;right:10px;top:0px;width:150px;}
+img{margin-left:20%;}
+body{margin-left:5%;}
+caption,th{font-family:tahoma,arial;font-size:8pt;white-space:nowrap;color:#369;letter-spacing:2px;text-align:center;}
+a,tr{font-family:arial;font-size:10pt;cursor:pointer;}
+.tdy{color:blue;}
+.list{font-family:arial;font-size:9pt;text-align:left;}
+.today{color:red;font-family:arial,verdana;font-size:9pt;}
+.hilitoday{color:red;font-family:arial,verdana;font-size:9pt;font-weight:bold;text-decoration:underline;}
+.label{background-color:#ccc;color:#246;font-weight:bold;}
+.inputhilite{font-weight:bold;}
+.hilite{background-color:#ddd;}
+.ei{border:none;background-color:#eee;}
+.header{line-height:25px;letter-spacing:3px;width:40%;height:30px;color:#abc;font-size:12pt;font-family:arial;letter-spacing:}
+h5{font-size:11pt;letter-spacing:3px;}
+.row1 th{font-family:tahoma;font-size:8pt;color:#eee;background-color:#88b;text-align:center;border:1px solid #555;}
+.row2 th{font-family:tahoma;font-size:8pt;color:#eee;background-color:#88b;text-align:center;border:1px solid #555;}
+.row3 th{font-family:tahoma;font-size:8pt;color:#eee;background-color:#999;text-align:center;border:1px solid #555;}
+td.wrp{white-space:normal;}
+#frm #acf{text-align:left;font-family:courier;}
+img{border:none;}
+a{text-decoration:none;}
+.dClass{padding:4px;color:blue;}
+textarea{font-family:tahoma;font-size:9pt;}
+table#card{border-collapse:collapse;border:1px double #777;box-shadow:7px 7px 4px #888;font-size:10pt;border-radius:15px;}
+#card td{font-size:11pt;font-family:corbel,arial;text-align:center;color:#244;border:1px solid #777;}
+#filteron{text-align:center;font-family:courier;font-size:10pt;color:#333;}
+#edtbl{margin-left:6%;}
+#card td.reminder{font-family:arial;}
+.ltrs{font-family:arial;font-size:10pt;width:17px;border:1px solid #899;text-align:center;cursor:pointer;color:#2f4f4f;}
+.hiltr{color:#fff;background-color:#000;}
+#minicard{width:300px;border:2px solid #bbb;font-family:cambria;font-size:9pt;position:absolute;right:230px;top:125px;}
+.err{background-color:#fbeeac;}
+table#search{width:100%;}
+input[type=button]{font-size:10pt;}
+#footer{position:fixed;bottom:0px;right:100px;font-size:8pt;}
+#card input[type=text]{background-color:#ddd;color:#555;}
+#signin input,th{font-size:11pt;}

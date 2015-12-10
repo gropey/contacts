@@ -1,0 +1,463 @@
+<meta charset="utf-8">
+<script type="text/javascript">
+var eId = {
+ id:0,
+ uid:0,
+ cid:0,
+ repno:0,
+ gid:0,
+ mode:new String('e'),
+ reEmail: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+ prevEamil:new String(),
+ row:$(),
+ sortCol:new String(),
+ setEmail:function(e){this.prevEmail = e;},
+ getEmail:function(){return this.prevEmail;},
+ setRow:function(r){if(r){this.row = r;}return this.row;},
+ getRow:function(){return this.row;},
+ hiltRow:function(){$(this.row).css('backgroundColor','yellow');},
+ unhltRow:function(){$(this.row).css('backgroundColor','#fff');},
+ setId:function(i){this.id = i;},
+ getId:function(){return this.id;},
+ setCid:function(c){this.cid = c;},
+ getCid:function(){return this.cid;},
+ setRepno:function(){
+   this.repno = localStorage.getItem('MYUser');
+   return this.repno;
+ },
+ getRepno:function(){
+   return this.repno;
+ },
+ getUsrid:function(){return this.uid;},  
+ valEmail:function (em){
+   var atPos=em.indexOf("@");
+   var dotPos=em.lastIndexOf(".");
+   if(atPos<1 || dotPos<atPos+2 || dotPos+2>=em.length){
+      return false;
+   }else{
+      return true;
+   }
+ },
+ getMode:function(){
+    if(this.mode == 'g'){
+        return 'cgi/inqemailgrps.pl?gid='+this.gid+'&ae='+this.repno;
+    }else{
+        return 'cgi/email_xml.pl?ae='+this.repno;
+    }
+ },
+ setMode:function(){
+   if(this.mode == 'e'){ 
+      this.mode = 'g';
+   }else{
+      this.mode = 'e';
+   }
+   return this.mode;
+ },
+ setGid:function(g){
+    this.gid = g;
+    return this.gid;
+ },
+ getGid:function(){
+    return this.gid;
+ },
+ setSortcol:function(c){
+    if(c == this.sortCol){
+       return true;
+    }
+    this.sortCol = c;
+    return false;
+ },
+ getSortcol:function(){
+    return this.sortCol;
+ },
+ resetGrps:function(){
+    $('select').prop('selectedIndex',0);
+    $('input[name=grp_name]').val('');
+    $('#data').empty();
+    $('button:first').text('Create');
+    return;
+ }
+};
+
+$(function(){
+ eId.setRepno(); 
+ load_controls();
+ doc.setDefaultTag('#data');
+ reset();
+});
+function dispatch(event){
+if(event){
+ switch($('input[type=button]').index($(event.target))){
+   case 3: groups();
+    break;
+   case 2: reset();
+    break;
+   case 1: findEmail();
+    break;
+   case 0: if($('#action').val() == 'Save'){
+               vld();
+           }
+           else {
+               vld(); 
+           }
+   break;
+ }
+}
+return false;
+}
+function reset(){
+ $('#action').val('Add');
+ $('#email').val('').removeClass('err');
+ $('#contacts').val('First').removeClass('err');
+ $('#organization').val('Last').removeClass('err');
+ $('#zip').val('').removeClass('err');
+ $('#stcodes').prop('selectedIndex',0); 
+ $('input[type=checkbox]').each(function(index){
+ 	$(this).removeAttr('checked');
+ }); 
+ eId.unhltRow();
+ $('#minicard').remove();
+ $('label[for=del]').hide();
+ getData(eId.getMode(),'email_list.xsl');
+ $('p').click(function(){
+   cntObj.back();
+ }).fadeIn();
+}
+function group_emails(){
+ $('#data').load(eId.getMode(),function(data){
+    $('#inqem tr').mouseover(function(){
+       $(this).addClass('hilite');
+     }).mouseout(function(){
+       $(this).removeClass('hilite');
+     });
+     if(eId.getGid() == 0){return;}
+     $('input[type=checkbox]').each(function(index){
+        if($(this).attr('gid') > 0){
+            $(this).prop('checked', true);
+        }else{
+            $(this).prop('checked', false);
+        }
+     }).click(toggle_member);
+ });
+}
+function sort(){
+   var s = $(doc.getXsldoc()).find('sort');
+   if(eId.setSortcol( $(event.target).attr('id'))){
+      if(s.attr('order') === 'ascending'){
+         s.attr('order','descending');
+      }else{
+         s.attr('order','ascending');
+      }
+   }else{
+      s.attr('select',eId.getSortcol());
+      s.attr('order','ascending');
+   }
+   doc.doXSLT();
+}
+function setSel(){
+    $('select').load('cgi/get_grps.pl',{'ae':eId.getRepno()}).change(function(){
+        if($(this).val() == 0){
+            eId.resetGrps();
+            return;
+        }
+        eId.setGid( $('option:selected',this).val() );
+        $('input[name=grp_name]').val($('option:selected',this).text());
+        $('button:first').text('Rename');
+        group_emails();
+    });
+}
+
+function groups(){
+   eId.setMode();
+   $('#controls').load('grpform.html',function(d){
+       $('button').click(function(event){
+           var i = $('button').index($(this));
+               switch(i){
+                   case 0:
+                    addgroup();
+                    break;
+                   case 1:
+                    delgroup();
+                    break;
+                   case 2:
+                    eId.setMode();
+                    load_controls();
+                    eId.setGid(0);
+                    reset();
+                    break;
+                   case 3:
+                    eId.resetGrps();
+                    break;
+               }
+       });
+       setSel();
+       $('#data').empty();
+       $('p').hide();
+   });
+}
+function toggle_member(){
+    if(!eId.getGid()){alert('No group selected.');return false;}
+    var param = {
+        'eid':($(event.target).attr('id') ),
+        'gid': $(event.target).prop('checked')  ? eId.getGid() : 0
+    };
+    $.post('cgi/toggle_member.pl',param,function(data){
+        if(data < 1){
+            alert (data);
+        }
+    });
+}
+function addgroup(){
+    var new_grp = $('input[name=grp_name]').val();
+    $('input[name=grp_name]').removeClass('err');
+    if(new_grp == ''){
+        $('input[name=grp_name]').addClass('err').focus();
+        return false;
+    }
+    if($('select').val() == 0){
+        $.post('cgi/add_grp.pl',{'ae':eId.getRepno(),'grp_name':new_grp},function(data){
+            setSel()
+            alert ( data );
+        });
+    }else{
+        $.post('cgi/chg_grp.pl',{'gid':$('select').val(),'grp_name':new_grp},function(data){
+            setSel();
+            alert (data);        
+        });
+    }
+}
+function delgroup(){
+   if($('select').val == 0){return;}
+   $.post('cgi/del_grp.pl',{'gid':$('select').val()},function(data){
+      setSel();
+      eId.resetGrps();
+      alert (data);
+   });
+}
+
+function load_controls(){
+ $('#controls').load('emailform.html',function(data){
+    $('input[type=button]').click(dispatch); 
+    $('#email').keydown(function(event){
+        if (event.keyCode == 13) {
+            if ($('input[type=checkbox]:checked').size() > 0 || eId.valEmail($(this).val())) {
+                vld();
+            }
+            else {
+                findEmail();
+            }     
+        }
+    });
+    $('input[name=send]').click(function(event){
+        if( $(this).val() > 0){
+            $('#none').removeAttr('checked');
+        }else{
+            $('#offg,#invite,#blog').removeAttr('checked');
+        }
+    });
+    $('input[name=taxstatus]').click(function(event){
+        $('input[name=taxstatus][value!='+$(this).val()+']').removeAttr('checked');
+    });
+    $('input[name=rating]').click(function(event){
+        $('input[name=rating][value!='+$(this).val()+']').removeAttr('checked');
+    });
+    $('input[name=mat]').click(function(event){
+        if( /^any/.test($(this).attr('id'))){
+            $('#ltf,#gtf,#gtt').removeAttr('checked');
+        }else{
+            $('#anymat').removeAttr('checked');
+        }
+    });
+    $('input[name=px]').click(function(event){
+        if( /^any/.test($(this).attr('id'))){
+            $('#disc,#par,#prem').removeAttr('checked');
+        }else{
+            $('#anypx').removeAttr('checked');
+        }
+    });
+    $('label[for=del]').hide();
+ });   
+}
+function setForm(str){
+ $('#minicard').remove();
+ var ary = str.split(/\|/);
+ eId.setId(ary[13]);
+ eId.setCid(ary[11]);
+ eId.setEmail(ary[6]);
+ $('#email').val(ary[6]).removeClass('err');
+ $('#contacts').val(ary[0]).removeClass('err');
+ $('#organization').val(ary[1]);
+ $('#action').val('Save');
+ $('#stcodes').val(ary[9]);
+ $('#zip').val(ary[14])
+ $('input[type=checkbox]').removeAttr('checked');
+ $('input[name=taxstatus][value='+ary[2]+']').attr('checked','checked');
+ $('input[name=rating][value='+ary[3]+']').attr('checked','checked');
+ $('input[name=mat][value='+ary[4]+']').attr('checked','checked');
+ $('input[name=px][value='+ary[5]+']').attr('checked','checked');
+ $('label[for=del]').fadeIn();
+ switch(parseInt(ary[12])){
+   case 0:
+      $('#none').attr('checked','checked');
+      break;
+   case 5: 
+     $('#offg').attr('checked','checked');
+     $('#invite').attr('checked','checked');
+     break;
+   case 6: 
+     $('#offg').attr('checked','checked');
+     $('#blog').attr('checked','checked');
+     break;
+   case 7:
+     $('#blog').attr('checked','checked');
+     $('#invite').attr('checked','checked');
+     break;
+   case 9:
+    $('#offg,#invite,#blog').attr('checked','checked');
+    break;
+   default:
+    $('input[name=send]').filter(function(index){
+       if((ary[12] - 1) == index){
+         $(this).attr('checked','checked');
+       }
+    });     
+ }
+}
+function findEmail(){
+ var strEmail = $.trim($('#email').val());
+ if (/\w+/.test(strEmail)) {
+   getData('cgi/email_filter.pl?ae='+eId.getRepno()+'&str='+strEmail,'email_list.xsl');
+ }  
+ else {
+    $('#email').addClass('err').focus();
+    return false;
+ }
+ return;
+ $.get('cgi/findinqemail.pl',{'chrs':strEmail,'rep':eId.getRepno()},function(data){
+   if(data){ 
+      setForm(data);
+   }else{
+      alert('No match');
+   }
+ });
+}
+function vld(){
+var url = new String();
+var params = {send:0,email:'',state:'XX',ae:'HS11',taxstatus:'A',rating:'A',mat:3,px:'any'};
+if(eId.valEmail($('#email').val()) && !$('#del').prop('checked')){
+   params['email'] = $.trim( $('#email').val() );
+}else{
+   alert( 'Review/reenter email box.' );
+   $('#email').focus();
+   return false;
+}
+if (/\d{5}/.test( $('input[name=zip]').val() )) {
+    params['zip'] = $('#zip').val();
+}
+if (/\w+/.test($('#contacts').val()) || !$('#del').attr('checked')){
+   params['contacts'] = $.trim($('#contacts').val());
+   params['organization'] = $.trim($('#organization').val());
+}
+else {
+    alert( 'Review/reenter name box.' );
+    $('#contact').focus();
+    return false;
+}
+params['cid'] = eId.getCid();
+params['id'] = eId.getId();
+params['ae'] = eId.getRepno();
+params['state'] = isValidState($('#stcodes').val());
+//params['source'] = $('#source').val();
+$('input[type=checkbox]').each(function(index){
+  if($(this).attr('checked')){
+    if($(this).attr('name')=='send'){
+       params['send'] += parseInt($(this).val());
+    }else{
+       params[$(this).attr('name')] = $(this).val();
+    }
+  }
+});
+if($('#action').val() == 'Save'){
+   if(!$('#del').attr('checked') && eId.getEmail() != params.email){
+      if(!chkDup(params.email)){
+         return false;
+      }
+   }
+   url = 'cgi/updateinqemail.pl';
+}else{
+   if(!chkDup(params.email)){
+      return false;
+   } 
+   url = 'cgi/addinqemail.pl';
+}
+//console.log ( params );
+$.post(url,params,function(data){
+   reset(); 
+});
+}
+function chkDup(e){
+    var ok = true;
+    $.ajax({
+        url:'cgi/fetch_email_row.pl',
+        type:'POST',
+        async:false,
+        data:{'email':e},
+        success:function(found){
+            if(found.length > 0){
+                ok = false;
+                return false;
+            }
+        }
+    });
+    if(!ok){
+        $('#email').val(e).focus();
+        alert( 'This email is in the database.' );
+    }
+   return ok;
+}
+function isValidState(st){
+ return (/[A-Z][A-Z]/.test(st)) ? st : 0;
+}
+function isValidAcct(sText){
+ var reAcctNo=/^(?:\d{8})$/;
+ return reAcctNo.test(sText);
+}
+function editEmail(x){
+ $('html,body').animate({scrollTop:0},'fast');
+ eId.unhltRow();
+ eId.setRow(x);
+ $.get('cgi/getinqemail.pl?id='+x.id,function(data){
+   setForm(data);
+   eId.hiltRow();
+ });
+ $('label[for=del]').fadeIn();
+}
+</script>
+<style>
+#inqform select{font-family:arial,verdana;text-align:center;}
+button,input[type=button]{font-size:8pt;} 
+input[type]{font-size:8pt;text-align:center;} 
+label{padding-left:3px;text-align:left;font-family:tahoma;font-size:8pt;}
+p{letter-spacing:3px;font-family:tahoma;color:#777;}
+#data td{text-align:right;font-family:arial;font-size:8pt;cursor:pointer;}
+th{font-family:tahoma;font-size:8pt;color:#234;background-color:#eee;text-align:right;}
+#contacts,#organization{text-align:left;}
+#email{text-align:center;}
+#inqform th{padding-right:10px;}
+.ckbx{text-align:right;}
+.textinput{text-align:left;}
+.hilite{background-color:#dfeedd;}
+table{border:1px solid #ccc;}
+#inqform{box-shadow:8px 8px 5px #888;table-layout:fixed;}
+#minicard td{padding-right:10px;}
+#status{text-align:center;}
+#inqem th{cursor:pointer;}
+.err{border:1px solid red;}
+fieldset{width:40%;font-family:corbel;}
+img{position:absolute;right:2px;top:2px;}
+</style>
+<img src="images/rsclogo.jpg" width="115px" />
+<p>Back</p>
+<div id="controls"></div>
+<br />
+<div id="data"></div>

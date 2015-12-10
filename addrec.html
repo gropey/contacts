@@ -1,0 +1,51 @@
+<form name='frm' enctype='multipart/form-data'>
+<table id='frm'>
+<tr style='text-align:center;'><th colspan='2'>New Record</th></tr>
+<tr>
+<td class="labels">Source</td>
+<td>
+<select id="src" name="source">
+</select>
+</td>
+</tr>
+<tr>
+<td class="labels">* Last Name/Co.</td>
+<td><input type='text' name='organization' size='30' val='t' req='1' /></td>
+</tr>
+<tr>
+<td class="labels">* First Name/Contacts</td>
+<td><input type='text' name='contacts' size='40' val='t' req='1' /></td>
+</tr>
+<tr>
+<td class="labels">Address</td>
+<td><input type='text' name='address' size='50' /></td>
+</tr>
+<tr>
+<td class="labels">* Phone</td>
+<td><input type='text' name='phone' size='15' val='p' req='1' /></td>
+</tr>
+<tr><td class="labels">EMail</td>
+<td><input type='text' name='email' size='30' val='e' /></td>
+</tr>
+<tr><td class="labels">Acct #</td>
+<td><input type='text' name='acctno' size='10' val='a' /></td>
+</tr>
+<tr><td class="labels">Munis</td><td><input type='text' name='munis' size='20' /></td></tr>
+<tr><td class="labels">Corps</td><td><input type='text' name='corps' size='20' /></td></tr>
+<tr><td class="labels">CMOs</td><td><input type='text' name='cmos' size='20' /></td></tr>
+<tr><td class="labels">Agencies</td><td><input type='text' name='agencies' size='20' /></td></tr>
+<tr><td class="labels">Other</td><td><input type='text' name='other' size='20' /></td></tr>
+<tr><td class="labels">Profile</td>
+<td>
+<textarea name='comment' rows='5' cols='55' wrap='virtual'>
+</textarea>
+</td>
+</tr>
+<tr>
+<td colspan='2'>
+<input type='button' value='OK' class='buttons' onclick='ckform();' />
+<input type='button' value='Cancel' class='buttons' onclick='clr();' />
+</td>
+</tr>
+</table>
+</form>

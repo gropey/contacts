@@ -1,0 +1,141 @@
+<script type="text/javascript">
+var apPage = {
+ param:{},
+ pid:null,
+ vld:function(){
+    var ok = true;
+    $('.err').removeClass('err');
+    $('#addpeople input[type=text]').each(function(index){
+        if (/^\w+|\d{3}-\d{4}$/.test($(this).val())) {
+            apPage.param[$(this).attr('name')] = $(this).val();
+        }
+        else if ( $(this).attr('req') ) {
+            $(this).addClass('err').focus();
+            ok = false;
+            return  false;
+        }
+    });
+    if ( !ok ) {
+        return false;
+    }
+    apPage.param['cid'] = cards.getid();
+    apPage.param['id'] = apPage.pid;
+    $.post('cgi/edit_add_Phno.pl',apPage.param,function(data){
+        if (data != 1) {
+            alert (data);
+        }
+        else {
+            apPage.list();
+        }
+    });
+    apPage.reset();
+ },
+ edit_cnt:function(row){
+    var vals = [];
+    $(row).find('td').each(function(index){
+        vals.push($(this).text());
+    });
+    $('#name').val(vals[0]);
+    $('#dept').val(vals[1]);
+    $('#title').val(vals[2]);
+    $('#phone').val(vals[3]);
+    $('input[value=Delete]').each(function(index){
+        $(this).remove();
+    });
+    $('<input type="button" value="Delete" />').click(apPage.del).appendTo('.btns');  
+    apPage.pid = row.id;
+ },
+ del:function(){
+    var yn = confirm('Confirm');
+    if (!yn) {
+        return;
+    }
+    $.post('cgi/delPhno.pl',{id:apPage.pid},function(data){
+        $('#pnlist').load('cgi/getPhnos.pl?id='+cards.getid(),function(data){
+            $(this).find('tr').click(function(event){
+                apPage.edit_cnt(this);
+            });
+        });
+        if (data != 1) {
+            alert ( data );   
+        }
+    });
+ },
+ reset:function(){
+    apPage.pid = 0;
+    apPage.param = {};
+    $('#addpeople input[type=text]').val('');
+    $('.err').removeClass('err');
+ },
+ dispatch:function(event){
+    if (event) {
+        var i = $('#addpeople input[type=button]').index($(event.target));
+        switch(i) {
+            case 0: apPage.vld();
+            break;
+            case 1: apPage.reset();
+            break;
+            case 2: $('#ap').remove();
+            break;
+        }
+    }
+ },
+ list:function(){
+    $('#pnlist').load('cgi/getPhnos.pl?id='+cards.getid(),function(data){
+        $(this).find('tr').click(function(event){
+            apPage.edit_cnt(this);
+        });
+    });
+ }
+};
+$(function(){
+ $('.btns input').click(apPage.dispatch); 
+ $('#addpeople input[type=text]').keydown(function(event){
+    if (event.keyCode == 13) {
+        apPage.vld();
+    }
+    else {
+        return;
+    }     
+ });
+ apPage.list();
+});
+</script>
+<style>
+#addpeople select,#addpeople input{font-family:calibri,verdana;text-align:center;font-size:9pt;}
+#addpeople input[type=button]{font-size:8pt;} 
+label{padding-left:3px;text-align:left;font-family:tahoma;font-size:8pt;}
+caption{letter-spacing:3px;font-family:tahoma;color:#777;text-align:left;}
+#addpeople td{font-family:arial;font-size:8pt;cursor:pointer;}
+#addpeople th{font-family:tahoma;font-size:8pt;color:#234;background-color:#eee;text-align:right;}
+#addpeople .btns{text-align:left;height:30px;}
+#status{text-align:left;height:30px;font-family:cambria;}
+#pnlist{border-top:1px solid #0F4FA8;margin-top:5px;}
+</style>
+<table id="addpeople">
+<caption>Add contact form</caption>
+<tr>
+<td class="btns" colspan="3">
+<input type="button" value="OK" />
+<input type="button" value="Reset" />
+<input type="button" value="Close" />
+</td>
+</tr>
+<tr>
+<td><label for="name">Name</td>
+<td><input id="name" name="person" type="text" size="30" req="1" /></label></td>
+</tr>
+<td><label for="dept">Dept</td>
+<td><input id="dept" name="dept" type="text" size="30" /></label></td>
+</tr>
+<tr>
+<td><label for="title">Title</td>
+<td><input id="title" name="title" type="text" size="25" /></label></td>
+</tr>
+<tr>
+<td><label for="phone">Phone</td>
+<td><input id="phone" name="teleno" type="text" req="1" /></label></td>
+</tr>
+</table>
+
+<div id="pnlist"></div>
